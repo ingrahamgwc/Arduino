@@ -72,10 +72,9 @@ void setup() {
   // I don't know what effect this has on the motor.
   AFMS.begin();
   
-  pinMode(servoPin, INPUT); 
-  digitalWrite(servoPin, HIGH); //pull-up - don't delete this (flaky button)
-  myservo.write(batterClose); 
-
+  pinMode( servoPin, INPUT ); 
+  digitalWrite( servoPin, HIGH ); //pull-up - don't delete this (flaky button)
+  
   servo.attach( servoPin );
   stopBatter();
 }
