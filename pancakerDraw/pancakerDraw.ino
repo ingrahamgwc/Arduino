@@ -73,31 +73,32 @@ void setup() {
   AFMS.begin();
   
   pinMode( servoPin, INPUT ); 
-  digitalWrite( servoPin, HIGH ); //pull-up - don't delete this (flaky button)
+  digitalWrite( servoPin, HIGH ); // pull-up resistor - don't delete this (flaky button)
   
   servo.attach( servoPin );
   stopBatter();
 }
 
 
-
+//----------------------------------------
+// Batter control functions (joystick button)
+//----------------------------------------
 void pourBatter() {
   servo.write( 110 );    // open batter valve with the servo at 110 degrees
-  Serial.print("Here comes the batter!");
+  Serial.println("Here comes the batter!");
 }
 
 void stopBatter() {
   servo.write( 10 );      // close batter valve with the servo at 10 degrees
-  Serial.print("Stop batter");
+  Serial.println("Stop batter");
 }
-
 
 // @return true if joystick button is pressed
 bool buttonPressed() {
 
-  int val = digitalRead(inPin); 
+  int val = digitalRead( servoPin ); 
   
-  return val;
+  return (val == LOW);   // low voltage means button pressed (resistor engaged)
 }
 
 
@@ -110,11 +111,12 @@ void handleJoystick() {
     int y = analogRead( yPin );
  //   y = 1023 - y;  // flip it to match our machine
 
+/*
     Serial.print("Joystick: ");
     Serial.print( x );
     Serial.print(", ");
     Serial.println( y );
-
+*/
     // stepStyle is
     // SINGLE means single-coil activation,
     // DOUBLE means 2 coils are activated at once (for higher torque) and
