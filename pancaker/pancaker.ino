@@ -33,14 +33,14 @@ void setup() {
 void loop() {
     int x = analogRead( xPin );
     int y = analogRead( yPin );
-    y = 1023 - y;  // flip it to match our machine
+ //   y = 1023 - y;  // flip it to match our machine
 
-/*
+
     Serial.print("Joystick: ");
     Serial.print( x );
     Serial.print(", ");
     Serial.println( y );
-*/
+
 
     // stepStyle is
     // SINGLE means single-coil activation,

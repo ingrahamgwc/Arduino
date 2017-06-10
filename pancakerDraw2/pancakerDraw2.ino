@@ -12,14 +12,16 @@
  */
 
 #include <AccelStepper.h>
+#include <Stepper.h>
 #include <Wire.h>
-#include <Adafruit_MotorShield.h>
-#include <Servo.h> 
+// #include <Adafruit_MotorShield.h>
+// #include "utility/Adafruit_MS_PWMServoDriver.h"
 
 #include <stdio.h>
 #include <stdlib.h>  // for math functions like abs()
 // #include <list>   *sigh* lists are C++ only, we are stuck with arrays on Arduino
 
+/*
 // Create the motor shield object (more than one can be used, we only have one)
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 
@@ -27,16 +29,13 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 // One motor is on port #1, the other #2 (M3 and M4)
 Adafruit_StepperMotor* stepperX = AFMS.getStepper( 200, 1 );
 Adafruit_StepperMotor* stepperY = AFMS.getStepper( 200, 2 );
+*/
 
-Servo servo;
+Stepper stepperX(200, 4, 5, 6, 7);
+
 
 int xPin = 2;  // analog pins for joystick
 int yPin = 0;
-int buttonPin = 7;
-int servoPin = 10;
-
-bool batterPouring = true;
-bool motorRunning = false;
 
 //----------------------------------------
 // functions to move the motors
@@ -73,89 +72,6 @@ void setup() {
   // create motor library with the default frequency of 1600Hz for PWM,
   // I don't know what effect this has on the motor.
   AFMS.begin();
-  
-  pinMode( buttonPin, INPUT ); 
-  digitalWrite( buttonPin, HIGH ); // pull-up resistor - don't delete this (flaky button)
-  
-  servo.attach( servoPin );
-  stopBatter();
-}
-
-
-//----------------------------------------
-// Batter control functions (joystick button)
-//----------------------------------------
-void pourBatter() {
-  if (!batterPouring) {
-    batterPouring = true;
-    servo.write( 110 );    // open batter valve with the servo at 110 degrees
-    Serial.println("Here comes the batter!");
-  }
-}
-
-void stopBatter() {
-  if (batterPouring) {
-    batterPouring = false;
-  
-    servo.write( 10 );      // close batter valve with the servo at 10 degrees
-    Serial.println("Stop batter");
-  }
-}
-
-// @return true if joystick button is pressed
-bool buttonPressed() {
-
-  int val = digitalRead( buttonPin ); 
-  return (val == LOW);   // low voltage means button pressed (resistor engaged)
-}
-
-
-//----------------------------------------
-// Read the joystick and move the motors
-// if button ispressed, open the batter valve
-//----------------------------------------
-void handleJoystick() {
-    int x = analogRead( xPin );
-    int y = analogRead( yPin );
-
-    // stepStyle is
-    // SINGLE means single-coil activation,
-    // DOUBLE means 2 coils are activated at once (for higher torque) and
-    // INTERLEAVE means that it alternates between single and double to get twice the resolution (but of course it's half the speed).
-    // MICROSTEP is a slow method where the coils are PWM'd to create smooth motion between steps.
-
-    int stepStyle = DOUBLE;    // DOUBLE seems to be best combination of torque and speed.
-
-    motorRunning = false;
-
-    if (x > 750) {
-        stepperX->onestep( FORWARD, stepStyle );
-        motorRunning = true;
-    }
-    if (x < 250) {
-        stepperX->onestep( BACKWARD, stepStyle);
-        motorRunning = true;
-    }
-
-    if (y > 750) {
-        stepperY->onestep( FORWARD, stepStyle );
-        motorRunning = true;
-    }
-    if (y < 250) {
-        stepperY->onestep( BACKWARD, stepStyle);
-        motorRunning = true;
-    }
-
-    if (!motorRunning) {
-        stepperX->release();   // let motor spin freely (don't lock gear in place)
-        stepperY->release();   // keeps motor cooler when idle, too
-    }
-
-    if (buttonPressed()) {
-      pourBatter();
-    } else {
-      stopBatter();
-    }
 }
 
 
@@ -230,6 +146,44 @@ void drawShape( long points[][2], int numPoints ) {
   Serial.println("Done!");
 }
 
+
+void handleJoyStick() {
+  int x = analogRead( xPin );
+  int y = analogRead( yPin );
+ //   y = 1023 - y;  // flip it to match our machine
+
+  bool motorRunning = false;
+
+  if (x > 750) {
+    motorX->step( FORWARD );
+    motorRunning = true;
+  }
+  if (x < 250) {
+    motorX->step( BACKWARD);
+    motorRunning = true;
+  }
+
+  if (y > 750) {
+    motorY->onestep( FORWARD );
+    motorRunning = true;
+  }
+  if (y < 250) {
+    motorY->onestep( BACKWARD);
+    motorRunning = true;
+  }
+
+  if (!motorRunning) {
+    motorX->release();   // let motor spin freely (don't lock gear in place)
+    motorY->release();   // keeps motor cooler when idle, too
+  }
+
+}
+
+
+}
+
+
+
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -262,16 +216,15 @@ long triangle[triPoints][2] = {
 
 //----------------------------------------
 void loop() {
-/*
  // drawShape( star, numPoints );
  // drawShape( triangle, triPoints );
 
-  // We're done! Let motor spin freely (don't lock gear in place), keeps motor cooler when idle, too
+  // We're done! Let motor spin freely (don't lock gear in place)
+  // keeps motor cooler when idle, too
   stepperX->release();
   stepperY->release();
 
   exit(0);  // don't keep looping, we could go into joystick mode here...  TODO
-*/
 
-   handleJoystick();
-} 
+  // handleJoystick();
+}
